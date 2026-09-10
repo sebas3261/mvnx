@@ -82,6 +82,11 @@ std::string ArgumentParser::getArgument(int index) const {
     return arguments[index];
 }
 
+const std::vector<std::string>& ArgumentParser::getArguments() const
+{
+    return arguments;
+}
+
 std::string ArgumentParser::getOption(const std::string& name) const {
     auto it = options.find(name);
 

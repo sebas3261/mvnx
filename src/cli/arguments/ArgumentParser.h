@@ -26,6 +26,8 @@ public:
     void parse();
 
     std::string getArgument(int index) const;
+    const std::vector<std::string>& getArguments() const;
+    
     std::string getOption(const std::string& name) const;
     bool hasOption(const std::string& name) const;
 };
