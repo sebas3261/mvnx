@@ -167,6 +167,12 @@ int InitCommand::execute(int argc, char *argv[])
 
     ofstream pomFile(pomPath);
 
+    if (!pomFile.is_open())
+    {
+        cerr << "Error: could not create pom.xml\n";
+        return 1;
+    }
+
     pomFile
         << "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
         << "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
