@@ -6,6 +6,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "compilerPath": "/usr/bin/clang++",
             "cStandard": "c17",
             "cppStandard": "c++20",

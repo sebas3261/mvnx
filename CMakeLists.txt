@@ -28,12 +28,15 @@ add_executable(mvnx
     src/project/ProjectGenerator.cpp
 
     src/cli/arguments/ArgumentParser.cpp
+    src/cli/help/HelpPrinter.cpp
     src/cli/prompt/Prompt.cpp
 )
 
 target_include_directories(mvnx PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+target_compile_definitions(mvnx PRIVATE MVNX_VERSION="${PROJECT_VERSION}")
 
 target_link_libraries(mvnx PRIVATE
     replxx
