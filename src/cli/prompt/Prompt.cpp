@@ -113,7 +113,8 @@ string Prompt::text(
 
 string Prompt::select(
     const string &label,
-    const vector<string> &options
+    const vector<string> &options,
+    const string &defaultValue
 )
 {
     if (options.empty())
@@ -122,6 +123,15 @@ string Prompt::select(
     }
 
     size_t selected = 0;
+
+    for (size_t i = 0; i < options.size(); i++)
+    {
+        if (options[i] == defaultValue)
+        {
+            selected = i;
+            break;
+        }
+    }
 
     auto repaint = [&]()
     {
@@ -164,7 +174,6 @@ string Prompt::select(
     prompt += Style::DIM;
     prompt += "│  ";
     prompt += Style::RESET;
-
     prompt += Style::CYAN;
     prompt += "Press ↑/↓ and Enter";
     prompt += Style::RESET;

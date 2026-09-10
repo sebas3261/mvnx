@@ -36,6 +36,6 @@ int main(int argc, char *argv[])
         return addCommand.execute(argc, argv);
     }
 
-    cout << "Command not found\n";
+    cout << "Command not found: " << command << "\n";
     return 0;
 }

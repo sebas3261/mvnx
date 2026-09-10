@@ -9,13 +9,83 @@ using namespace std;
 
 void ProjectValidator::validate(const ProjectConfig &config)
 {
-    if (!isValidProjectName(config.name, config.javaVersion))
+    validateProjectName(config.name, config.javaVersion);
+    validateGroupId(config.groupId, config.javaVersion);
+    validateJavaVersion(config.javaVersion);
+}
+
+void ProjectValidator::validateProjectName(const string &name, const string &javaVersion)
+{
+    regex pattern(R"(^[a-z][a-z0-9]*(-[a-z0-9]+)*$)");
+
+    if (!regex_match(name, pattern))
+    {
         throw invalid_argument("Invalid project name. Use lowercase letters, numbers and hyphens.");
+    }
 
-    if (!isValidGroupId(config.groupId, config.javaVersion))
-        throw invalid_argument("Invalid group ID. Example: com.example");
+    string packageName = ProjectNaming::toPackageName(name);
 
-    if (!isValidJavaVersion(config.javaVersion))
+    if (!isValidJavaIdentifier(packageName, javaVersion))
+    {
+        if (isJavaReservedWord(packageName))
+        {
+            throw invalid_argument("Invalid project name. '" + packageName + "' is a reserved Java keyword.");
+        }
+
+        throw invalid_argument("Invalid project name. Use lowercase letters, numbers and hyphens.");
+    }
+}
+
+void ProjectValidator::validateGroupId(const string &groupId, const string &javaVersion)
+{
+    string segment;
+
+    for (char c : groupId)
+    {
+        if (c == '.')
+        {
+            if (segment.empty())
+            {
+                throw invalid_argument("Invalid group ID. Package segments cannot be empty.");
+            }
+
+            if (isJavaReservedWord(segment))
+            {
+                throw invalid_argument("Invalid group ID. '" + segment + "' is a reserved Java keyword.");
+            }
+
+            if (!isValidJavaIdentifier(segment, javaVersion))
+            {
+                throw invalid_argument("Invalid group ID. Use lowercase package segments separated by dots.");
+            }
+
+            segment.clear();
+        }
+        else
+        {
+            segment += c;
+        }
+    }
+
+    if (segment.empty())
+    {
+        throw invalid_argument("Invalid group ID. Package segments cannot be empty.");
+    }
+
+    if (isJavaReservedWord(segment))
+    {
+        throw invalid_argument("Invalid group ID. '" + segment + "' is a reserved Java keyword.");
+    }
+
+    if (!isValidJavaIdentifier(segment, javaVersion))
+    {
+        throw invalid_argument("Invalid group ID. Use lowercase package segments separated by dots.");
+    }
+}
+
+void ProjectValidator::validateJavaVersion(const string &version)
+{
+    if (!isValidJavaVersion(version))
         throw invalid_argument("Invalid Java version. Supported: 8, 11, 17, 21, 25");
 }
 
@@ -83,7 +153,10 @@ bool ProjectValidator::isJavaReservedWord(const std::string &value)
         "return", "short", "static", "strictfp", "super",
         "switch", "synchronized", "this", "throw", "throws",
         "transient", "try", "void", "volatile", "while",
-        "true", "false", "null"};
+        "true", "false", "null",
+        "exports", "module", "non-sealed", "open", "opens",
+        "permits", "provides", "record", "requires", "sealed",
+        "to", "transitive", "uses", "var", "with", "yield"};
 
     return reservedWords.contains(value);
 }

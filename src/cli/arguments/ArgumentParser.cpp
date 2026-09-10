@@ -1,4 +1,5 @@
 #include "ArgumentParser.h"
+#include <stdexcept>
 
 ArgumentParser::ArgumentParser(int argc, char* argv[], int startIndex)
     : argc(argc), argv(argv), startIndex(startIndex) {
@@ -38,32 +39,42 @@ void ArgumentParser::parse() {
             const Option* option = findLongOption(name);
 
             if (option == nullptr) {
-                continue;
+                throw std::runtime_error("Unknown option: " + current);
             }
 
             if (option->requiresValue) {
-                if (i + 1 < argc) {
-                    options[option->name] = argv[i + 1];
-                    i++;
+                if (i + 1 >= argc || std::string(argv[i + 1]).starts_with("-")) {
+                    throw std::runtime_error(
+                        "Option requires a value: " + current
+                    );
                 }
+
+                options[option->name] = argv[++i];
             } else {
                 options[option->name] = "";
             }
 
-        } else if (current.starts_with("-") && current.length() == 2) {
+        } else if (current.starts_with("-")) {
+            if (current.length() != 2) {
+                throw std::runtime_error("Unknown option: " + current);
+            }
+
             char shortName = current[1];
 
             const Option* option = findShortOption(shortName);
 
             if (option == nullptr) {
-                continue;
+                throw std::runtime_error("Unknown option: " + current);
             }
 
             if (option->requiresValue) {
-                if (i + 1 < argc) {
-                    options[option->name] = argv[i + 1];
-                    i++;
+                if (i + 1 >= argc || std::string(argv[i + 1]).starts_with("-")) {
+                    throw std::runtime_error(
+                        "Option requires a value: " + current
+                    );
                 }
+
+                options[option->name] = argv[++i];
             } else {
                 options[option->name] = "";
             }

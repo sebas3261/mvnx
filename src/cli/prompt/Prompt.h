@@ -18,6 +18,7 @@ public:
 
     std::string select(
         const std::string &label,
-        const std::vector<std::string> &options
+        const std::vector<std::string> &options,
+        const std::string &defaultValue = ""
     );
 };
