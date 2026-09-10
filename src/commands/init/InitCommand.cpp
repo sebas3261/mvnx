@@ -1,12 +1,12 @@
 #include "InitCommand.h"
-#include "../../cli/arguments/ArgumentParser.h"
+#include "cli/arguments/ArgumentParser.h"
 
-#include <cctype>
 #include <filesystem>
 #include <iostream>
 #include <regex>
 #include <string>
 #include <fstream>
+#include <unordered_set>
 
 using namespace std;
 
@@ -22,14 +22,7 @@ static string toPackageName(const string &name)
 
         if (c == '-')
         {
-            if (i + 1 >= static_cast<int>(name.length()))
-            {
-                break;
-            }
-
-            i++;
-            c = name[i];
-            c = static_cast<char>(toupper(c));
+            continue;
         }
 
         packageName += c;
@@ -38,20 +31,68 @@ static string toPackageName(const string &name)
     return packageName;
 }
 
+static bool isJavaReservedWord(const string &value)
+{
+    static const unordered_set<string> reservedWords = {
+        "abstract", "assert", "boolean", "break", "byte",
+        "case", "catch", "char", "class", "const",
+        "continue", "default", "do", "double", "else",
+        "enum", "extends", "final", "finally", "float",
+        "for", "goto", "if", "implements", "import",
+        "instanceof", "int", "interface", "long", "native",
+        "new", "package", "private", "protected", "public",
+        "return", "short", "static", "strictfp", "super",
+        "switch", "synchronized", "this", "throw", "throws",
+        "transient", "try", "void", "volatile", "while",
+        "true", "false", "null"};
+
+    return reservedWords.contains(value);
+}
+
+static bool isValidJavaIdentifier(const string &value)
+{
+    regex pattern(R"(^[a-z_][a-z0-9_]*$)");
+
+    return regex_match(value, pattern) && !isJavaReservedWord(value);
+}
+
 static bool isValidGroupId(const string &groupId)
 {
-    regex pattern(
-        R"(^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$)");
+    string segment;
 
-    return regex_match(groupId, pattern);
+    for (char c : groupId)
+    {
+        if (c == '.')
+        {
+            if (!isValidJavaIdentifier(segment))
+            {
+                return false;
+            }
+
+            segment.clear();
+        }
+        else
+        {
+            segment += c;
+        }
+    }
+
+    return isValidJavaIdentifier(segment);
 }
 
 static bool isValidProjectName(const string &name)
 {
-    regex pattern(
-        R"(^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$)");
+    regex pattern(R"(^[a-z][a-z0-9]*(-[a-z0-9]+)*$)");
 
-    return regex_match(name, pattern);
+    return regex_match(name, pattern) && isValidJavaIdentifier(toPackageName(name));
+}
+
+static bool isValidJavaVersion(const string &version)
+{
+    static const unordered_set<string> supportedVersions = {
+        "8", "11", "17", "21", "25"};
+
+    return supportedVersions.contains(version);
 }
 
 static fs::path packageToPath(const string &packageName)
@@ -111,7 +152,7 @@ int InitCommand::execute(int argc, char *argv[])
         javaVersion = "21";
     }
 
-    if (!isValidProjectName(projectName))
+    if (!isValidProjectName(projectName) || isJavaReservedWord(projectName))
     {
         cerr << "Invalid project name. Use letters, numbers and hyphens only.\n";
         cerr << "Example: my-project\n";
@@ -122,6 +163,13 @@ int InitCommand::execute(int argc, char *argv[])
     {
         cerr << "Invalid group ID.\n";
         cerr << "Example: com.myproject\n";
+        return 1;
+    }
+
+    if (!isValidJavaVersion(javaVersion))
+    {
+        cerr << "Invalid Java version. Supported versions: 8, 11, 17, 21, 25.\n";
+        cerr << "Example: --java 21\n";
         return 1;
     }
 
