@@ -1,5 +1,6 @@
 #include <iostream>
 #include "commands/init/InitCommand.h"
+#include "commands/add/AddCommand.h"
 
 using namespace std;
 
@@ -17,6 +18,9 @@ int main(int argc, char *argv[])
     {
         InitCommand initCommand;
         return initCommand.execute(argc, argv);
+    }else if (command == "add"){
+        AddCommand addCommand;
+        return addCommand.execute(argc, argv);
     }
 
     cout << "Command not found\n";
