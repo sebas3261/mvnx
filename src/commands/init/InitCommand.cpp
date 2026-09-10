@@ -133,6 +133,13 @@ int InitCommand::execute(int argc, char *argv[])
     cout << "Package name: " << packageName << '\n';
 
     fs::path projectPath = projectName;
+
+    if (fs::exists(projectPath))
+    {
+        cerr << "Project directory already exists: " << projectName << '\n';
+        return 1;
+    }
+
     fs::path packagePath = packageToPath(packageName);
 
     fs::create_directories(
